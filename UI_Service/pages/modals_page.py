@@ -25,8 +25,6 @@ class ModalsPage(BasePage):
         """Проверить, открыто ли простое модальное окно."""
         with allure.step("Проверяем, открыто ли простое модальное окно"):
             logger.info("Проверяем, открыто ли простое модальное окно")
-            # Элемент всегда в DOM (скрыт через display:none), поэтому
-            # ищем по присутствию, а не по видимости.
             element = self.driver.find_element(*MPL.simple_popup)
             return "pum-active" in element.get_attribute("class")
 
@@ -99,10 +97,6 @@ class ModalsPage(BasePage):
         with allure.step("Кликаем по кнопке Submit"):
             logger.info("Кликаем по кнопке Submit")
             element = self.find_element(*MPL.form_popup_submit)
-            # Кнопка находится внизу длинной формы. При появлении сообщения
-            # валидации email макет сдвигается, и координатный клик перехватывается
-            # другим элементом (ElementClickInterceptedException). Кликаем через JS,
-            # чтобы запустить валидацию формы независимо от положения кнопки.
             self.driver.execute_script("arguments[0].click();", element)
 
     def get_name_error(self) -> str:
