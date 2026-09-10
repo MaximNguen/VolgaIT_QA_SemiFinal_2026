@@ -58,6 +58,21 @@ class WaitHelpers:
             )
             return False
 
+    def wait_until_opacity(self, locator, expected_opacity="1", timeout=10):
+        """Ожидание установки прозрачности элемента (завершение анимации появления)."""
+        try:
+            WebDriverWait(self.driver, timeout).until(
+                lambda d: d.find_element(*locator).value_of_css_property("opacity")
+                == expected_opacity
+            )
+            return True
+        except TimeoutException as e:
+            logger.error(
+                f"Прозрачность {expected_opacity} не установлена у элемента {locator} "
+                f"за {timeout} секунд. - {e}"
+            )
+            return False
+
     def wait_for_alert(self, timeout=10):
         """Ожидание появления JS-alert."""
         try:

@@ -50,6 +50,7 @@ class ModalsPage(BasePage):
         """Закрыть простое модальное окно кнопкой «×»."""
         with allure.step("Закрываем простое модальное окно кнопкой «×»"):
             logger.info("Закрываем простое модальное окно кнопкой «×»")
+            self.wait.wait_until_opacity(MPL.simple_popup)
             self.click(*MPL.simple_popup_close)
             WebDriverWait(self.driver, 5).until_not(
                 lambda d: "pum-active" in d.find_element(*MPL.simple_popup).get_attribute("class")
@@ -145,6 +146,7 @@ class ModalsPage(BasePage):
         """Закрыть модальное окно с формой кнопкой «×»."""
         with allure.step("Закрываем модальное окно с формой кнопкой «×»"):
             logger.info("Закрываем модальное окно с формой кнопкой «×»")
+            self.wait.wait_until_opacity(MPL.form_popup)
             self.click(*MPL.form_popup_close)
             WebDriverWait(self.driver, 5).until_not(
                 lambda d: "pum-active" in d.find_element(*MPL.form_popup).get_attribute("class")

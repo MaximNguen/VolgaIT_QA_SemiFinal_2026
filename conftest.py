@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 def driver():
     """Фикстура для создания драйвера Chrome с параметрами."""
     options = Options()
+    options.page_load_strategy = "eager"
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--window-size=1920,1080")
