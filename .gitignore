@@ -1,0 +1,16 @@
+.venv
+results
+.idea
+__pycache__
+allure-results
+allure-report
+*.log
+*.xml
+*.html
+*.csv
+*.sqlite
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.coverage
