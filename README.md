@@ -97,6 +97,43 @@ pytest tests/ui_testCases -k chrome -v
 pytest tests/ui_testCases/e2e -k firefox -v
 ```
 
+Браузеры и headless-режим управляются переменными окружения:
+
+| Переменная | По умолчанию | Назначение |
+|---|---|---|
+| `BROWSERS` | `chrome,firefox,edge` | Список браузеров через запятую |
+| `HEADLESS` | `1`, если задан `CI`, иначе `0` | Запуск без графического интерфейса |
+
+Пример для сервера/CI:
+
+```bash
+HEADLESS=1 BROWSERS=chrome pytest tests/ui_testCases -n 2 -v
+```
+
+```powershell
+$env:HEADLESS="1"; $env:BROWSERS="chrome"; pytest tests/ui_testCases -n 2 -v
+```
+
+Если браузер не установлен в системе, его тесты автоматически пропускаются.
+
+## CI/CD
+
+Workflow: `.github/workflows/run_tests.yml`.
+
+- **UI-Tests** — Ubuntu, Python 3.12, headless Chrome (`HEADLESS=1`,
+  `BROWSERS=chrome`), запуск `pytest tests/ui_testCases -n 2`, выгрузка
+  Allure-результатов артефактом.
+- **API-Tests** — Ubuntu, Python 3.12, запуск `pytest tests/api_testCases -n 2`,
+  выгрузка Allure-результатов артефактом.
+
+В CI выбран только Chrome: он гарантированно доступен на `ubuntu-latest` и
+стабильно работает в headless-режиме. Кроссбраузерный прогон
+(Chrome/Firefox/Edge) выполняется локально; при необходимости список браузеров
+в CI расширяется переменной `BROWSERS`.
+
+Количество воркеров при `-n auto` ограничено 4 через
+`pytest_xdist_auto_num_workers`, чтобы не перегружать раннер браузерами.
+
 ## Тестовые данные и фикстуры
 
 - `session_user` — уникальный пользователь на каждый xdist-воркер, создаётся

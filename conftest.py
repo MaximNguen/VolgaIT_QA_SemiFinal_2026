@@ -1,6 +1,8 @@
 import logging
 import os
+import shutil
 import uuid
+from pathlib import Path
 
 import pytest
 import allure
@@ -19,30 +21,87 @@ from utils.api.payloads import build_user_payload
 
 logger = logging.getLogger(__name__)
 
+HEADLESS = os.getenv(
+    "HEADLESS",
+    "1" if os.getenv("CI") else "0",
+).lower() in ("1", "true", "yes")
 
-@pytest.fixture(params=["chrome", "firefox", "edge"])
+BROWSERS = [
+    browser.strip().lower()
+    for browser in os.getenv("BROWSERS", "chrome,firefox,edge").split(",")
+    if browser.strip()
+] or ["chrome"]
+
+
+def _browser_available(browser_name: str) -> bool:
+    """Проверяет, установлен ли браузер в системе."""
+    candidates = {
+        "chrome": [
+            "google-chrome",
+            "google-chrome-stable",
+            "chromium",
+            "chromium-browser",
+            r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+            r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+        ],
+        "firefox": [
+            "firefox",
+            r"C:\Program Files\Mozilla Firefox\firefox.exe",
+        ],
+        "edge": [
+            "microsoft-edge",
+            "microsoft-edge-stable",
+            "msedge",
+            r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+            r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+        ],
+    }
+    return any(
+        shutil.which(item) or Path(item).exists()
+        for item in candidates.get(browser_name, [])
+    )
+
+
+def _chromium_options(options_class):
+    """Общие аргументы Chromium-браузеров для локального и CI-запуска."""
+    options = options_class()
+    if HEADLESS:
+        options.add_argument("--headless=new")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1920,1080")
+    options.page_load_strategy = "eager"
+    return options
+
+
+@pytest.fixture(params=BROWSERS)
 def driver(request):
     """Фикстура для создания драйвера выбранного браузера."""
     browser_name = request.param
 
+    if not _browser_available(browser_name):
+        pytest.skip(
+            f"Браузер '{browser_name}' не установлен в системе. "
+            f"Доступные браузеры: {BROWSERS}"
+        )
+
     if browser_name == "chrome":
-        options = ChromeOptions()
-        options.add_argument("--no-sandbox")
-        options.add_argument("--window-size=1920,1080")
-        options.page_load_strategy = "eager"
-        driver = webdriver.Chrome(options=options)
+        driver = webdriver.Chrome(
+            options=_chromium_options(ChromeOptions)
+        )
     elif browser_name == "firefox":
         options = FirefoxOptions()
+        if HEADLESS:
+            options.add_argument("-headless")
         options.add_argument("--width=1920")
         options.add_argument("--height=1080")
         options.page_load_strategy = "eager"
         driver = webdriver.Firefox(options=options)
     elif browser_name == "edge":
-        options = EdgeOptions()
-        options.add_argument("--no-sandbox")
-        options.add_argument("--window-size=1920,1080")
-        options.page_load_strategy = "eager"
-        driver = webdriver.Edge(options=options)
+        driver = webdriver.Edge(
+            options=_chromium_options(EdgeOptions)
+        )
     else:
         raise ValueError(
             f"Указан неверный браузер для тестирования: {browser_name}"
@@ -52,6 +111,11 @@ def driver(request):
     driver.implicitly_wait(IMPLICIT_WAIT_SECONDS)
     yield driver
     driver.quit()
+
+
+def pytest_xdist_auto_num_workers(config):
+    """Ограничивает -n auto, чтобы не перегружать CI-раннер браузерами."""
+    return min(os.cpu_count() or 1, 4)
 
 
 @pytest.fixture
