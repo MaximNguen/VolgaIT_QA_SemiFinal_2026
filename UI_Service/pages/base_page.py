@@ -2,7 +2,10 @@ import logging
 from typing import List
 
 from selenium.webdriver import Keys, ActionChains
-from selenium.common.exceptions import ElementClickInterceptedException
+from selenium.common.exceptions import (
+    ElementClickInterceptedException,
+    TimeoutException,
+)
 from selenium.webdriver.remote.webelement import WebElement
 import allure
 
@@ -22,7 +25,13 @@ class BasePage:
         """Открыть страницу по URL."""
         with allure.step(f"Открываем страницу по URL: {url}"):
             logger.info(f"Открываем страницу по URL: {url}")
-            self.driver.get(url)
+            try:
+                self.driver.get(url)
+            except TimeoutException:
+                logger.warning(
+                    f"Страница {url} не загрузилась полностью за отведённое "
+                    "время, продолжаем с явными ожиданиями элементов"
+                )
 
     def get_current_url(self) -> str:
         """Получить текущий URL страницы."""

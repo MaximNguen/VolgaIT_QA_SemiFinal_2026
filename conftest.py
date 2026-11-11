@@ -29,22 +29,26 @@ def driver(request):
         options = ChromeOptions()
         options.add_argument("--no-sandbox")
         options.add_argument("--window-size=1920,1080")
+        options.page_load_strategy = "eager"
         driver = webdriver.Chrome(options=options)
     elif browser_name == "firefox":
         options = FirefoxOptions()
         options.add_argument("--width=1920")
         options.add_argument("--height=1080")
+        options.page_load_strategy = "eager"
         driver = webdriver.Firefox(options=options)
     elif browser_name == "edge":
         options = EdgeOptions()
         options.add_argument("--no-sandbox")
         options.add_argument("--window-size=1920,1080")
+        options.page_load_strategy = "eager"
         driver = webdriver.Edge(options=options)
     else:
         raise ValueError(
             f"Указан неверный браузер для тестирования: {browser_name}"
         )
 
+    driver.set_page_load_timeout(60)
     driver.implicitly_wait(IMPLICIT_WAIT_SECONDS)
     yield driver
     driver.quit()
