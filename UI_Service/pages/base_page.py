@@ -85,24 +85,26 @@ class BasePage:
                     f"Клик по элементу {locator} перехвачен повторно, "
                     "выполняем JS-клик"
                 )
-                self.driver.execute_script(
-                    "const el = arguments[0];"
-                    "const target = el.querySelector('svg') || el;"
-                    "target.click();",
-                    element,
-                )
+                self._dispatch_click(element)
+
+    def _dispatch_click(self, element: WebElement) -> None:
+        """Диспатчит bubbling-клик по элементу или вложенному SVG."""
+        self.driver.execute_script(
+            "const el = arguments[0];"
+            "const target = el.querySelector('svg') || el;"
+            "target.dispatchEvent(new MouseEvent('click', {"
+            "  bubbles: true,"
+            "  cancelable: true,"
+            "  view: window"
+            "}));",
+            element,
+        )
 
     def js_click(self, *locator) -> None:
         """Клик по элементу через JavaScript (обходит оверлеи)."""
         with allure.step(f"Кликаем по элементу через JS: {locator}"):
             logger.info(f"Кликаем по элементу через JS: {locator}")
-            element = self.find_element(*locator)
-            self.driver.execute_script(
-                "const el = arguments[0];"
-                "const target = el.querySelector('svg') || el;"
-                "target.click();",
-                element,
-            )
+            self._dispatch_click(self.find_element(*locator))
 
     def input_text(self, element: WebElement, text: str) -> None:
         """Ввести текст в поле."""
