@@ -2,6 +2,7 @@ import logging
 from typing import List
 
 from selenium.webdriver import Keys, ActionChains
+from selenium.common.exceptions import ElementClickInterceptedException
 from selenium.webdriver.remote.webelement import WebElement
 import allure
 
@@ -48,7 +49,26 @@ class BasePage:
         with allure.step(f"Кликаем по элементу с локатором: {locator}"):
             logger.info(f"Кликаем по элементу с локатором: {locator}")
             self.wait.wait_for_clickable(locator)
-            self.find_element(*locator).click()
+            element = self.find_element(*locator)
+            try:
+                element.click()
+                return
+            except ElementClickInterceptedException:
+                logger.warning(
+                    f"Клик по элементу {locator} перехвачен, прокручиваем и повторяем"
+                )
+                self.driver.execute_script(
+                    "arguments[0].scrollIntoView({block: 'center'});", element
+                )
+            element = self.find_element(*locator)
+            try:
+                element.click()
+            except ElementClickInterceptedException:
+                logger.warning(
+                    f"Клик по элементу {locator} перехвачен повторно, "
+                    "выполняем JS-клик"
+                )
+                self.driver.execute_script("arguments[0].click();", element)
 
     def input_text(self, element: WebElement, text: str) -> None:
         """Ввести текст в поле."""
@@ -80,7 +100,9 @@ class BasePage:
         """Прокрутка страницы до указанного элемента."""
         with allure.step(f"Прокручиваем страницу до элемента: {element}"):
             logger.info(f"Прокручиваем страницу до элемента: {element}")
-            self.driver.execute_script("arguments[0].scrollIntoView();", element)
+            self.driver.execute_script(
+                "arguments[0].scrollIntoView({block: 'center'});", element
+            )
         return self
 
     def press_escape(self) -> None:

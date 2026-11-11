@@ -7,6 +7,8 @@ import allure
 
 from config import IMPLICIT_WAIT_SECONDS
 from UI_Service.pages.factory_pages.page_factory import PageFactory
+from data.ui_data.mock_data import valid_login
+from data.ui_data.urls import login_page_url, profile_page_url
 
 logger = logging.getLogger(__name__)
 
@@ -15,8 +17,8 @@ logger = logging.getLogger(__name__)
 def driver():
     """Фикстура для создания драйвера Chrome с параметрами."""
     options = Options()
-    options.page_load_strategy = "eager"
-    options.add_argument("--headless")
+    #options.page_load_strategy = "eager"
+    #options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--window-size=1920,1080")
 
@@ -35,27 +37,46 @@ def page_factory(driver):
 
 
 @pytest.fixture
-def calendar_page(page_factory):
-    """Фикстура для страницы календаря."""
-    return page_factory.calendar_page
+def register_page(page_factory):
+    """Фикстура для страницы регистрации."""
+    return page_factory.register_page
 
 
 @pytest.fixture
-def modals_page(page_factory):
-    """Фикстура для страницы модальных окон."""
-    return page_factory.modals_page
+def login_page(page_factory):
+    """Фикстура для страницы авторизации."""
+    return page_factory.login_page
 
 
 @pytest.fixture
-def ads_page(page_factory):
-    """Фикстура для страницы рекламных окон."""
-    return page_factory.ads_page
+def book_store_page(page_factory):
+    """Фикстура для страницы магазина книг."""
+    return page_factory.book_store_page
 
 
 @pytest.fixture
-def form_fields_page(page_factory):
-    """Фикстура для страницы формы."""
-    return page_factory.form_fields_page
+def profile_page(page_factory):
+    """Фикстура для страницы профиля."""
+    return page_factory.profile_page
+
+
+@pytest.fixture
+def authorized_user(login_page):
+    """Авторизует тестового пользователя и возвращает его логин и пароль."""
+    username, password = valid_login
+    login_page.open(login_page_url)
+    login_page.login(username, password)
+    login_page.wait_until_logged_in()
+    return username, password
+
+
+@pytest.fixture
+def empty_collection(profile_page, authorized_user):
+    """Удаляет все книги из коллекции тестового пользователя."""
+    profile_page.open(profile_page_url)
+    for book in profile_page.get_books(load_timeout=2):
+        profile_page.delete_book(book["title"])
+    return authorized_user
 
 
 @pytest.hookimpl(hookwrapper=True)

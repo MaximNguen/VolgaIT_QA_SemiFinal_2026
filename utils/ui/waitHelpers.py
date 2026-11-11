@@ -79,3 +79,27 @@ class WaitHelpers:
             return WebDriverWait(self.driver, timeout).until(EC.alert_is_present())
         except TimeoutException as e:
             logger.error(f"Alert не появился за {timeout} секунд. - {e}")
+
+    def wait_for_url_contains(self, fragment, timeout=10):
+        """Ожидание появления фрагмента в текущем URL."""
+        try:
+            WebDriverWait(self.driver, timeout).until(EC.url_contains(fragment))
+            return True
+        except TimeoutException as e:
+            logger.error(
+                f"Фрагмент '{fragment}' не появился в URL за {timeout} секунд. - {e}"
+            )
+            return False
+
+    def wait_for_element_absent(self, locator, timeout=10):
+        """Ожидание исчезновения элемента со страницы."""
+        try:
+            WebDriverWait(self.driver, timeout).until(
+                EC.invisibility_of_element_located(locator)
+            )
+            return True
+        except TimeoutException as e:
+            logger.error(
+                f"Элемент с локатором {locator} не исчез за {timeout} секунд. - {e}"
+            )
+            return False

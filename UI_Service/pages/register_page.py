@@ -4,7 +4,7 @@ import allure
 from selenium.webdriver.support.ui import WebDriverWait
 
 from UI_Service.pages.base_page import BasePage
-from data.ui_data.locators_registration import RegisterPageLocators as RPL
+from data.ui_data.locators_registration import RegistrationPageLocators as RPL
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,25 @@ class RegisterPage(BasePage):
     
     def __init__(self, driver):
         super().__init__(driver)
-        
+
+    def open(self, url: str) -> None:
+        """Открыть страницу регистрации и дождаться инициализации reCAPTCHA."""
+        super().open(url)
+        self.wait_until_ready()
+
+    def wait_until_ready(self, timeout: int = 20) -> None:
+        """Дождаться, пока reCAPTCHA получит токен и перестанет сбрасывать форму."""
+        with allure.step("Ожидаем готовности формы регистрации"):
+            logger.info("Ожидаем готовности формы регистрации")
+            script = (
+                "const token = document.querySelector("
+                "\"textarea[name='g-recaptcha-response']\");"
+                "return !!token && token.value.length > 0;"
+            )
+            WebDriverWait(self.driver, timeout).until(
+                lambda driver: driver.execute_script(script)
+            )
+
     def check_registration_header_loaded(self) -> bool:
         """Проверить, что заголовок страницы регистрации загружен."""
         with allure.step("Проверяем, что заголовок регистрации загружен"):
@@ -54,3 +72,9 @@ class RegisterPage(BasePage):
         with allure.step("Кликаем на кнопку регистрации"):
             logger.info("Кликаем на кнопку регистрации")
             self.click(*RPL.submit_button)
+            
+    def get_error_text(self) -> str:
+        """Получить текст ошибки при регистрации"""
+        with allure.step("Получаем текст ошибки"):
+            logger.info("Получаем текст ошиюки")
+            return self.find_element(*RPL.error_message).text

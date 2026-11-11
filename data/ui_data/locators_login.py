@@ -8,4 +8,5 @@ class LoginPageLocators:
     username_input = (By.ID, "userName")
     password_input = (By.ID, "password")
     login_button = (By.ID, "login")
+    new_user_button = (By.ID, "newUser")
     error_message = (By.ID, "name")
