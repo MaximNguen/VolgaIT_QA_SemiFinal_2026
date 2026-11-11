@@ -4,7 +4,11 @@ import allure
 import pytest
 
 from data.ui_data.urls import registration_page_url
-from data.ui_data.mock_data import valid_registration, invalid_registration
+from data.ui_data.mock_data import (
+    generate_random_string,
+    valid_registration,
+    invalid_registration,
+)
 from data.ui_data.expected_data import success
 
 logger = logging.getLogger(__name__)
@@ -25,11 +29,12 @@ class TestRegistrationPage:
     @allure.title("Успешная регистрация с валидными данными")
     @allure.severity(allure.severity_level.CRITICAL)
     @pytest.mark.parametrize(
-        "first_name, last_name, user, password",
+        "first_name, last_name, password",
         valid_registration,
     )
-    def test_valid_registration(self, first_name, last_name, user, password):
+    def test_valid_registration(self, first_name, last_name, password):
         """Валидная регистрация"""
+        user = generate_random_string(10)
         logger.info(
             f"Вводим данные для регистрации - {first_name}, {last_name}, {user}, {password}"
         )
@@ -46,11 +51,12 @@ class TestRegistrationPage:
     @allure.title("Невалидная регистрация с невалидными данными")
     @allure.severity(allure.severity_level.CRITICAL)
     @pytest.mark.parametrize(
-        "first_name, last_name, user, password",
+        "first_name, last_name, password",
         invalid_registration,
     )
-    def test_invalid_registration(self, first_name, last_name, user, password):
+    def test_invalid_registration(self, first_name, last_name, password):
         """Регистрация с невалидным паролем не выполняется"""
+        user = generate_random_string(10)
         logger.info(
             f"Вводим данные для регистрации - {first_name}, {last_name}, {user}, {password}"
         )

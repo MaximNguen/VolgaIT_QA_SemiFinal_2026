@@ -35,7 +35,40 @@ class RegisterRequestSchema(SchemaModelMixin):
     username: str = Field(..., description="Юзернейм пользователя для регистрации")
     password: str = Field(..., description="Пароль пользователя для регистрации")
     
+    @field_validator("username")
+    @classmethod
+    @allure.step("Проверим, что никнейм не пустой в валидации")
+    def validate_username(cls, v: str) -> str:
+        if v.strip() == "":
+            logger.error("Получен пустый никнейм")
+            raise ValueError("Пустой никнейм, должен быть непустыи")
+        return v
+    
+    @field_validator("password")
+    @classmethod
+    @allure.step("Проверим, что никнейм не пустой в валидации")
+    def validate_username(cls, v: str) -> str:
+        if len(v.strip()) < 8:
+            logger.error("Невалидный пароль, требуется пароль формата 0-1, латиница + специальный символ и блина от 8 символов")
+            raise ValueError("Невалидный пароль, требуется пароль формата 0-1, латиница + специальный символ и блина от 8 символов")
+        return v
+        
+        
 class RegisterResponseSchema(SchemaModelMixin):
     """Схема для ответа регистрации пользователя"""
+    
+    userID: str = Field(..., description = "Уникальный идентификатор пользователя")
+    username: str = Field(..., description="Никнейм пользователя")
+    books: List[] = Field(..., description="Список книг у пользователя")
+    
+    @field_validator("username")
+    @classmethod
+    @allure.step("Проверим, что никнейм не пустой в валидации")
+    def validate_username(cls, v: str) -> str:
+        if v.strip() == "":
+            logger.error("Получен пустый никнейм")
+            raise ValueError("Пустой никнейм, должен быть непустыи")
+        return v
+    
     
     

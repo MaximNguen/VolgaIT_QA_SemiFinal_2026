@@ -1,5 +1,8 @@
 import logging
+import os
+import uuid
 
+import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import pytest
@@ -7,8 +10,7 @@ import allure
 
 from config import IMPLICIT_WAIT_SECONDS
 from UI_Service.pages.factory_pages.page_factory import PageFactory
-from data.ui_data.mock_data import valid_login
-from data.ui_data.urls import login_page_url, profile_page_url
+from data.ui_data.urls import account_api_url, login_page_url, profile_page_url
 
 logger = logging.getLogger(__name__)
 
@@ -17,8 +19,8 @@ logger = logging.getLogger(__name__)
 def driver():
     """Фикстура для создания драйвера Chrome с параметрами."""
     options = Options()
-    #options.page_load_strategy = "eager"
-    #options.add_argument("--headless")
+    # options.page_load_strategy = "eager"
+    # options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--window-size=1920,1080")
 
@@ -60,10 +62,30 @@ def profile_page(page_factory):
     return page_factory.profile_page
 
 
+@pytest.fixture(scope="session")
+def session_user():
+    """Создаёт отдельного пользователя для каждого xdist-воркера."""
+    worker = os.environ.get("PYTEST_XDIST_WORKER", "main")
+    username = f"qa_{worker}_{uuid.uuid4().hex[:8]}"
+    password = "Fodi2006@"
+    response = requests.post(
+        account_api_url,
+        json={"userName": username, "password": password},
+        timeout=30,
+    )
+    if response.status_code != 201:
+        pytest.fail(
+            "Не удалось создать тестового пользователя через API: "
+            f"{response.status_code} {response.text}"
+        )
+    logger.info(f"Создан тестовый пользователь: {username}")
+    return username, password
+
+
 @pytest.fixture
-def authorized_user(login_page):
+def authorized_user(login_page, session_user):
     """Авторизует тестового пользователя и возвращает его логин и пароль."""
-    username, password = valid_login
+    username, password = session_user
     login_page.open(login_page_url)
     login_page.login(username, password)
     login_page.wait_until_logged_in()

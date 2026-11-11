@@ -36,7 +36,6 @@ class TestBookStoreCatalog:
         )
 
 
-@pytest.mark.xdist_group(name="book_store")
 @allure.epic("Book Store")
 @allure.feature("Коллекция книг пользователя")
 class TestUserBookCollection:

@@ -3,11 +3,7 @@ import logging
 import allure
 
 from data.ui_data.expected_data import invalid_login
-from data.ui_data.mock_data import (
-    invalid_login_password,
-    unknown_login,
-    valid_login,
-)
+from data.ui_data.mock_data import invalid_login_password, unknown_login
 from data.ui_data.urls import login_page_url
 
 
@@ -30,9 +26,9 @@ class TestLoginPage:
 
     @allure.title("Успешная авторизация зарегистрированного пользователя")
     @allure.severity(allure.severity_level.CRITICAL)
-    def test_valid_login(self, login_page, profile_page):
+    def test_valid_login(self, login_page, profile_page, session_user):
         """Вход под тестовым пользователем переводит в профиль с его именем."""
-        username, password = valid_login
+        username, password = session_user
         login_page.open(login_page_url)
         login_page.login(username, password)
         login_page.wait_until_logged_in()
@@ -40,13 +36,10 @@ class TestLoginPage:
 
     @allure.title("Авторизация с неверным паролем")
     @allure.severity(allure.severity_level.CRITICAL)
-    def test_invalid_password(self, login_page, profile_page):
+    def test_invalid_password(self, login_page, session_user):
         """Неверный пароль не авторизует пользователя."""
-        username, password = valid_login
+        username, _ = session_user
         login_page.open(login_page_url)
-        login_page.login(username, password)
-        login_page.wait_until_logged_in()
-        profile_page.logout()
         login_page.login(username, invalid_login_password)
         assert login_page.get_error_text() == invalid_login
         assert "/login" in login_page.get_current_url()
@@ -79,9 +72,9 @@ class TestLoginPage:
         )
 
     @allure.title("Выход из аккаунта возвращает на страницу авторизации")
-    def test_logout(self, login_page, profile_page):
+    def test_logout(self, login_page, profile_page, session_user):
         """После выхода из аккаунта отображается форма авторизации."""
-        username, password = valid_login
+        username, password = session_user
         login_page.open(login_page_url)
         login_page.login(username, password)
         login_page.wait_until_logged_in()

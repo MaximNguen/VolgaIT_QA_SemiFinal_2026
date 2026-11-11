@@ -10,13 +10,13 @@ def generate_random_string(length):
 
 
 valid_registration = [
-    ("text", "textAhMoment", generate_random_string(10), "Fodi2006@"),
-    ("bruh", "offerPls", generate_random_string(10), "testPass2006@"),
+    ("text", "textAhMoment", "Fodi2006@"),
+    ("bruh", "offerPls", "testPass2006@"),
 ]
 
 invalid_registration = [
-    ("text", "textAhMoment", generate_random_string(10), "aodi2006@"),
-    ("bruh", "offerPls", generate_random_string(10), "testsass2006@"),
+    ("text", "textAhMoment", "aodi2006@"),
+    ("bruh", "offerPls", "testsass2006@"),
 ]
 
 valid_login = ("Maxtest", "Fodi2006@")
