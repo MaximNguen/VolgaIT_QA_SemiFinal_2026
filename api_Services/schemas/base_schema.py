@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, Mapping, Type, TypeVar
 
-from pydantic import BaseModel
+import allure
+from pydantic import BaseModel, field_validator
+
+logger = logging.getLogger(__name__)
 
 TModel = TypeVar("TModel", bound="SchemaModelMixin")
 
@@ -30,3 +34,12 @@ class ErrorResponseSchema(SchemaModelMixin):
 
     code: str
     message: str
+
+    @field_validator("code", "message")
+    @classmethod
+    @allure.step("Проверка полей ответа с ошибкой")
+    def validate_error_fields(cls, v: str) -> str:
+        if v.strip() != "":
+            return v
+        logger.error("Ошибка в ответе - пустое поле ошибки")
+        raise ValueError("Ошибка полей ответа с ошибкой")

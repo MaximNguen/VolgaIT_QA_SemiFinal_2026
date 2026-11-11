@@ -84,6 +84,18 @@ class BasePage:
                     element,
                 )
 
+    def js_click(self, *locator) -> None:
+        """Клик по элементу через JavaScript (обходит оверлеи)."""
+        with allure.step(f"Кликаем по элементу через JS: {locator}"):
+            logger.info(f"Кликаем по элементу через JS: {locator}")
+            element = self.find_element(*locator)
+            self.driver.execute_script(
+                "const el = arguments[0];"
+                "const target = el.querySelector('svg') || el;"
+                "target.click();",
+                element,
+            )
+
     def input_text(self, element: WebElement, text: str) -> None:
         """Ввести текст в поле."""
         with allure.step(f"Вводим текст '{text}' в элемент: {element}"):
@@ -125,11 +137,13 @@ class BasePage:
             logger.info("Нажимаем клавишу Escape")
             ActionChains(self.driver).send_keys(Keys.ESCAPE).perform()
 
-    def accept_alert(self) -> str:
+    def accept_alert(self, timeout: int = 10) -> str:
         """Принять JS-alert и вернуть его текст."""
         with allure.step("Принимаем JS-alert и получаем его текст"):
             logger.info("Принимаем JS-alert и получаем его текст")
-            alert = self.wait.wait_for_alert()
+            alert = self.wait.wait_for_alert(timeout=timeout)
+            if alert is None:
+                return None
             text = alert.text
             alert.accept()
             return text

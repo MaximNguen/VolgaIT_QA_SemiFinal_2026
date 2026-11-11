@@ -112,7 +112,10 @@ class ProfilePage(BasePage):
             logger.info(f"Удаляем книгу из профиля: {title}")
             locator = (By.XPATH, PPL.delete_book_by_title.format(title=title))
             for attempt in range(1, attempts + 1):
-                self.click(*locator)
+                if attempt == 1:
+                    self.click(*locator)
+                else:
+                    self.js_click(*locator)
                 try:
                     WebDriverWait(self.driver, 5).until(
                         EC.element_to_be_clickable(PPL.confirm_delete_ok)

@@ -114,6 +114,14 @@ class BookStorePage(BasePage):
         with allure.step("Добавляем книгу в коллекцию пользователя"):
             logger.info("Добавляем книгу в коллекцию пользователя")
             self.click(*BPL.add_to_collection_button)
+            alert_text = self.accept_alert(timeout=5)
+            if alert_text is not None:
+                return alert_text
+
+            logger.warning(
+                "Alert не появился после обычного клика, повторяем через JS"
+            )
+            self.js_click(*BPL.add_to_collection_button)
             return self.accept_alert()
 
     def back_to_store(self) -> None:
