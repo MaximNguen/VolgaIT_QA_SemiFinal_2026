@@ -2,9 +2,6 @@ import logging
 from selenium.webdriver.remote.webdriver import WebDriver
 
 from UI_Service.pages.calendar_page import CalendarPage
-from UI_Service.pages.modals_page import ModalsPage
-from UI_Service.pages.ads_page import AdsPage
-from UI_Service.pages.form_fields_page import FormFieldsPage
 
 logger = logging.getLogger(__name__)
 
@@ -15,10 +12,10 @@ class PageFactory:
     def __init__(self, driver: WebDriver):
         self.driver = driver
         self.pages_data = {
-            "calendar_page": CalendarPage(self.driver),
-            "modals_page": ModalsPage(self.driver),
-            "ads_page": AdsPage(self.driver),
-            "form_fields_page": FormFieldsPage(self.driver),
+            "register_page": CalendarPage(self.driver),
+            "login_page": ModalsPage(self.driver),
+            "profile_page": AdsPage(self.driver),
+            "book_page": FormFieldsPage(self.driver),
         }
 
     def get_page(self, page_name: str) -> object:

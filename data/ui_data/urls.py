@@ -1,6 +1,6 @@
 """URL-адреса страниц тренажёра practice-automation.com."""
 
-calendars_url = "https://practice-automation.com/calendars/"
-modals_url = "https://practice-automation.com/modals/"
-ads_url = "https://practice-automation.com/ads/"
-form_fields_url = "https://practice-automation.com/form-fields/"
+registration_page_url = "https://demoqa.com/register"
+login_page_url = "https://demoqa.com/login"
+profile_page_url = "https://demoqa.com/profile"
+books_page_url = "https://demoqa.com/books"
