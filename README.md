@@ -71,10 +71,12 @@ pytest.ini
 
 | Что запустить                      | Команда                                                             |
 | ---------------------------------- | ------------------------------------------------------------------- |
+| Все тесты параллельно              | `pytest -n 3`                                                       |
 | Все API-тесты                      | `pytest tests/api_testCases -v`                                     |
 | API-тесты параллельно              | `pytest tests/api_testCases -n 4 -v`                                |
 | Все UI-тесты (Chrome)              | `pytest tests/ui_testCases -k chrome -v`                            |
 | Все UI-тесты (Chrome/Firefox/Edge) | `pytest tests/ui_testCases -v`                                      |
+| Все UI-тесты (Chrome/Firefox/Edge) параллельно | `pytest tests/ui_testCases -v -n 3`                     |
 | E2E UI                             | `pytest tests/ui_testCases/e2e -v`                                  |
 | E2E API                            | `pytest tests/api_testCases/e2e -v`                                 |
 | E2E UI + API                       | `pytest tests/ui_testCases/e2e tests/api_testCases/e2e -v`          |
