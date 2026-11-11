@@ -1,24 +1,24 @@
-#UI configs
+# UI configs
 IMPLICIT_WAIT_SECONDS = 10
 AD_DISPLAY_TIMEOUT_SECONDS = 7
 
-#Api configs
-BASE_URL = "https://demoqa.com/swagger"
-#Router User (reg and login)
-ACCOUNT_PREFIX_URL = "/Account/v1/"
-LOGIN_URL = "/GenerateToken"
-REGISTER_URL = "/User"
-CHECKUSER_URL = "/Authorized"
+# API configs
+BASE_URL = "https://demoqa.com"
 
-#Item books methods
-ADD_URL = "/api/create"
-GET_BOOK_URL = "/api/delete/"
-GET_ALL_BOOKS_URL = "/api/getAll"
-DELETE_BOOK_URL = "/api/get/"
+# Account (registration, authorization)
+REGISTER_URL = "/Account/v1/User"
+LOGIN_URL = "/Account/v1/GenerateToken"
+CHECKUSER_URL = "/Account/v1/Authorized"
+USER_URL = "/Account/v1/User/"
 
-TIMEOUT_SECONDS = 5
+# Book Store
+GET_ALL_BOOKS_URL = "/BookStore/v1/Books"
+ADD_BOOKS_URL = "/BookStore/v1/Books"
+DELETE_BOOK_URL = "/BookStore/v1/Book"
+
+TIMEOUT_SECONDS = 15
 
 HEADERS = {
     "Content-Type": "application/json",
-    "Accept": "application/json"
+    "Accept": "application/json",
 }

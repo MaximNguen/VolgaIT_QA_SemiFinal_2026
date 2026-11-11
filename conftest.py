@@ -2,33 +2,51 @@ import logging
 import os
 import uuid
 
-import requests
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 import pytest
 import allure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.edge.options import Options as EdgeOptions
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
 
+from api_Services.api.factory_endpoint.factory_endpoint import FactoryEndpoint
+from api_Services.clients.book_client import BookClient
+from api_Services.clients.user_client import UserClient
 from config import IMPLICIT_WAIT_SECONDS
 from UI_Service.pages.factory_pages.page_factory import PageFactory
-from data.ui_data.urls import account_api_url, login_page_url, profile_page_url
+from data.ui_data.urls import login_page_url, profile_page_url
+from utils.api.payloads import build_user_payload
 
 logger = logging.getLogger(__name__)
 
 
-@pytest.fixture()
-def driver():
-    """Фикстура для создания драйвера Chrome с параметрами."""
-    options = Options()
-    # options.page_load_strategy = "eager"
-    # options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--window-size=1920,1080")
+@pytest.fixture(params=["chrome", "firefox", "edge"])
+def driver(request):
+    """Фикстура для создания драйвера выбранного браузера."""
+    browser_name = request.param
 
-    driver = webdriver.Chrome(options=options)
+    if browser_name == "chrome":
+        options = ChromeOptions()
+        options.add_argument("--no-sandbox")
+        options.add_argument("--window-size=1920,1080")
+        driver = webdriver.Chrome(options=options)
+    elif browser_name == "firefox":
+        options = FirefoxOptions()
+        options.add_argument("--width=1920")
+        options.add_argument("--height=1080")
+        driver = webdriver.Firefox(options=options)
+    elif browser_name == "edge":
+        options = EdgeOptions()
+        options.add_argument("--no-sandbox")
+        options.add_argument("--window-size=1920,1080")
+        driver = webdriver.Edge(options=options)
+    else:
+        raise ValueError(
+            f"Указан неверный браузер для тестирования: {browser_name}"
+        )
+
     driver.implicitly_wait(IMPLICIT_WAIT_SECONDS)
-
     yield driver
-
     driver.quit()
 
 
@@ -67,19 +85,11 @@ def session_user():
     """Создаёт отдельного пользователя для каждого xdist-воркера."""
     worker = os.environ.get("PYTEST_XDIST_WORKER", "main")
     username = f"qa_{worker}_{uuid.uuid4().hex[:8]}"
-    password = "Fodi2006@"
-    response = requests.post(
-        account_api_url,
-        json={"userName": username, "password": password},
-        timeout=30,
-    )
-    if response.status_code != 201:
-        pytest.fail(
-            "Не удалось создать тестового пользователя через API: "
-            f"{response.status_code} {response.text}"
-        )
-    logger.info(f"Создан тестовый пользователь: {username}")
-    return username, password
+    payload = build_user_payload(username=username)
+    user_client = UserClient()
+    user = user_client.register(payload)
+    logger.info(f"Создан тестовый пользователь: {user.username}")
+    return user.username, payload["password"]
 
 
 @pytest.fixture
@@ -99,6 +109,61 @@ def empty_collection(profile_page, authorized_user):
     for book in profile_page.get_books(load_timeout=2):
         profile_page.delete_book(book["title"])
     return authorized_user
+
+
+# ======================= Фикстуры для тестов API =======================
+
+
+@pytest.fixture
+def user_client():
+    """Клиент Account API."""
+    return UserClient()
+
+
+@pytest.fixture
+def book_client():
+    """Клиент Book Store API."""
+    return BookClient()
+
+
+@pytest.fixture
+def endpoint_factory():
+    """Фабрика API-эндпоинтов."""
+    factory = FactoryEndpoint()
+    yield factory
+    factory.clear_cache()
+
+
+@pytest.fixture
+def api_user(user_client):
+    """Регистрирует пользователя через API и возвращает его данные."""
+    payload = build_user_payload()
+    user = user_client.register(payload)
+    token_response = user_client.generate_token(payload)
+    assert token_response.token, "Не получен токен авторизации"
+    return {
+        "payload": payload,
+        "username": payload["userName"],
+        "password": payload["password"],
+        "userId": user.userID,
+        "token": token_response.token,
+    }
+
+
+@pytest.fixture
+def store_books(book_client):
+    """Список книг магазина."""
+    return book_client.get_store_books().books
+
+
+@pytest.fixture
+def api_clean_books(book_client, api_user):
+    """Удаляет книги пользователя после теста."""
+    yield
+    try:
+        book_client.delete_all_books(api_user["userId"], api_user["token"])
+    except Exception as exc:
+        logger.warning(f"Не удалось очистить коллекцию книг: {exc}")
 
 
 @pytest.hookimpl(hookwrapper=True)
