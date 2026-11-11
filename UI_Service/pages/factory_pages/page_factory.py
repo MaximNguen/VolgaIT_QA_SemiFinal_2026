@@ -1,10 +1,10 @@
 import logging
 from selenium.webdriver.remote.webdriver import WebDriver
 
-from UI_Service.pages.calendar_page import CalendarPage
-from UI_Service.pages.modals_page import ModalsPage
-from UI_Service.pages.ads_page import AdsPage
-from UI_Service.pages.form_fields_page import FormFieldsPage
+from UI_Service.pages.register_page import RegisterPage
+from UI_Service.pages.login_page import LoginPage
+from UI_Service.pages.book_store_page import BookStorePage
+from UI_Service.pages.profile_page import ProfilePage
 
 logger = logging.getLogger(__name__)
 
@@ -15,10 +15,10 @@ class PageFactory:
     def __init__(self, driver: WebDriver):
         self.driver = driver
         self.pages_data = {
-            "calendar_page": CalendarPage(self.driver),
-            "modals_page": ModalsPage(self.driver),
-            "ads_page": AdsPage(self.driver),
-            "form_fields_page": FormFieldsPage(self.driver),
+            "register_page": RegisterPage(self.driver),
+            "login_page": LoginPage(self.driver),
+            "book_store_page": BookStorePage(self.driver),
+            "profile_page": ProfilePage(self.driver),
         }
 
     def get_page(self, page_name: str) -> object:
@@ -30,21 +30,21 @@ class PageFactory:
         raise ValueError(f"Страница '{page_name}' не найдена в фабрике.")
 
     @property
-    def calendar_page(self) -> CalendarPage:
-        """Получить страницу календаря."""
-        return self.get_page("calendar_page")
+    def register_page(self) -> RegisterPage:
+        """Получить страницу регистрации."""
+        return self.get_page("register_page")
 
     @property
-    def modals_page(self) -> ModalsPage:
-        """Получить страницу модальных окон."""
-        return self.get_page("modals_page")
+    def login_page(self) -> LoginPage:
+        """Получить страницу логина."""
+        return self.get_page("login_page")
 
     @property
-    def ads_page(self) -> AdsPage:
-        """Получить страницу рекламных окон."""
-        return self.get_page("ads_page")
+    def book_store_page(self) -> BookStorePage:
+        """Получить страницу магазина книг."""
+        return self.get_page("book_store_page")
 
     @property
-    def form_fields_page(self) -> FormFieldsPage:
-        """Получить страницу формы."""
-        return self.get_page("form_fields_page")
+    def profile_page(self) -> ProfilePage:
+        """Получить страницу профиля."""
+        return self.get_page("profile_page")

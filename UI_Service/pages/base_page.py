@@ -2,6 +2,10 @@ import logging
 from typing import List
 
 from selenium.webdriver import Keys, ActionChains
+from selenium.common.exceptions import (
+    ElementClickInterceptedException,
+    TimeoutException,
+)
 from selenium.webdriver.remote.webelement import WebElement
 import allure
 
@@ -21,7 +25,13 @@ class BasePage:
         """Открыть страницу по URL."""
         with allure.step(f"Открываем страницу по URL: {url}"):
             logger.info(f"Открываем страницу по URL: {url}")
-            self.driver.get(url)
+            try:
+                self.driver.get(url)
+            except TimeoutException:
+                logger.warning(
+                    f"Страница {url} не загрузилась полностью за отведённое "
+                    "время, продолжаем с явными ожиданиями элементов"
+                )
 
     def get_current_url(self) -> str:
         """Получить текущий URL страницы."""
@@ -34,6 +44,10 @@ class BasePage:
         with allure.step(f"Находим элемент с локатором: {locator}"):
             logger.info(f"Находим элемент с локатором: {locator}")
             element = self.wait.wait_for_element(locator)
+            if element is None:
+                raise TimeoutException(
+                    f"Элемент с локатором {locator} не найден"
+                )
             self.scroll(element)
             return element
 
@@ -47,8 +61,50 @@ class BasePage:
         """Клик по элементу, найденному по локатору."""
         with allure.step(f"Кликаем по элементу с локатором: {locator}"):
             logger.info(f"Кликаем по элементу с локатором: {locator}")
-            self.wait.wait_for_clickable(locator)
-            self.find_element(*locator).click()
+            clickable = self.wait.wait_for_clickable(locator)
+            if clickable is None:
+                raise TimeoutException(
+                    f"Элемент с локатором {locator} не кликабелен"
+                )
+            element = self.find_element(*locator)
+            try:
+                element.click()
+                return
+            except ElementClickInterceptedException:
+                logger.warning(
+                    f"Клик по элементу {locator} перехвачен, прокручиваем и повторяем"
+                )
+                self.driver.execute_script(
+                    "arguments[0].scrollIntoView({block: 'center'});", element
+                )
+            element = self.find_element(*locator)
+            try:
+                element.click()
+            except ElementClickInterceptedException:
+                logger.warning(
+                    f"Клик по элементу {locator} перехвачен повторно, "
+                    "выполняем JS-клик"
+                )
+                self._dispatch_click(element)
+
+    def _dispatch_click(self, element: WebElement) -> None:
+        """Диспатчит bubbling-клик по элементу или вложенному SVG."""
+        self.driver.execute_script(
+            "const el = arguments[0];"
+            "const target = el.querySelector('svg') || el;"
+            "target.dispatchEvent(new MouseEvent('click', {"
+            "  bubbles: true,"
+            "  cancelable: true,"
+            "  view: window"
+            "}));",
+            element,
+        )
+
+    def js_click(self, *locator) -> None:
+        """Клик по элементу через JavaScript (обходит оверлеи)."""
+        with allure.step(f"Кликаем по элементу через JS: {locator}"):
+            logger.info(f"Кликаем по элементу через JS: {locator}")
+            self._dispatch_click(self.find_element(*locator))
 
     def input_text(self, element: WebElement, text: str) -> None:
         """Ввести текст в поле."""
@@ -80,7 +136,9 @@ class BasePage:
         """Прокрутка страницы до указанного элемента."""
         with allure.step(f"Прокручиваем страницу до элемента: {element}"):
             logger.info(f"Прокручиваем страницу до элемента: {element}")
-            self.driver.execute_script("arguments[0].scrollIntoView();", element)
+            self.driver.execute_script(
+                "arguments[0].scrollIntoView({block: 'center'});", element
+            )
         return self
 
     def press_escape(self) -> None:
@@ -89,11 +147,13 @@ class BasePage:
             logger.info("Нажимаем клавишу Escape")
             ActionChains(self.driver).send_keys(Keys.ESCAPE).perform()
 
-    def accept_alert(self) -> str:
+    def accept_alert(self, timeout: int = 10) -> str:
         """Принять JS-alert и вернуть его текст."""
         with allure.step("Принимаем JS-alert и получаем его текст"):
             logger.info("Принимаем JS-alert и получаем его текст")
-            alert = self.wait.wait_for_alert()
+            alert = self.wait.wait_for_alert(timeout=timeout)
+            if alert is None:
+                return None
             text = alert.text
             alert.accept()
             return text
