@@ -44,6 +44,10 @@ class BasePage:
         with allure.step(f"Находим элемент с локатором: {locator}"):
             logger.info(f"Находим элемент с локатором: {locator}")
             element = self.wait.wait_for_element(locator)
+            if element is None:
+                raise TimeoutException(
+                    f"Элемент с локатором {locator} не найден"
+                )
             self.scroll(element)
             return element
 
@@ -57,7 +61,11 @@ class BasePage:
         """Клик по элементу, найденному по локатору."""
         with allure.step(f"Кликаем по элементу с локатором: {locator}"):
             logger.info(f"Кликаем по элементу с локатором: {locator}")
-            self.wait.wait_for_clickable(locator)
+            clickable = self.wait.wait_for_clickable(locator)
+            if clickable is None:
+                raise TimeoutException(
+                    f"Элемент с локатором {locator} не кликабелен"
+                )
             element = self.find_element(*locator)
             try:
                 element.click()
