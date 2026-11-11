@@ -9,9 +9,14 @@ class BookPageLocators:
     search_input = (By.ID, "searchBox")
     books_table = (By.CSS_SELECTOR, "div.books-wrapper table")
     books_rows = (By.CSS_SELECTOR, "div.books-wrapper table tbody tr")
+    book_title_links = (
+        By.CSS_SELECTOR,
+        "div.books-wrapper table tbody tr a",
+    )
     book_link_by_title = (
         '//div[contains(@class, "books-wrapper")]//a[normalize-space()="{title}"]'
     )
+    search_input_by_class = (By.CLASS_NAME, "form-control")
 
     # Страница конкретной книги
     detail_title = (By.XPATH, '//div[@id="title-wrapper"]//label[@id="userName-value"]')

@@ -77,7 +77,12 @@ class BasePage:
                     f"Клик по элементу {locator} перехвачен повторно, "
                     "выполняем JS-клик"
                 )
-                self.driver.execute_script("arguments[0].click();", element)
+                self.driver.execute_script(
+                    "const el = arguments[0];"
+                    "const target = el.querySelector('svg') || el;"
+                    "target.click();",
+                    element,
+                )
 
     def input_text(self, element: WebElement, text: str) -> None:
         """Ввести текст в поле."""

@@ -17,7 +17,7 @@ class ProfilePageLocators:
     delete_book_by_title = (
         '//div[contains(@class, "profile-wrapper")]'
         '//tr[.//a[normalize-space()="{title}"]]'
-        '//span[starts-with(@id, "delete-record-")]'
+        '//span[starts-with(@id, "delete-record-")]/svg'
     )
     confirm_delete_ok = (By.ID, "closeSmallModal-ok")
     confirm_delete_cancel = (By.ID, "closeSmallModal-cancel")

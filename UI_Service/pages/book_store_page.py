@@ -2,6 +2,8 @@ import logging
 
 import allure
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.support.ui import WebDriverWait
 
 from UI_Service.pages.base_page import BasePage
 from data.ui_data.locators_book_page import BookPageLocators as BPL
@@ -42,6 +44,55 @@ class BookStorePage(BasePage):
                     }
                 )
             return books
+        
+    def check_search_input(self) -> bool:
+        """Проверка отображаемости поля поиска."""
+        with allure.step("Проверяем наличие поля поиска"):
+            logger.info("Проверяем наличие поля поиска")
+            return self.find_element(*BPL.search_input).is_displayed()
+
+    def get_search_input(self) -> WebElement:
+        """Получить поле поиска."""
+        with allure.step("Получаем поле поиска"):
+            logger.info("Получаем поле поиска")
+            return self.find_element(*BPL.search_input)
+
+    def input_search_text(self, text: str) -> None:
+        """Ввести текст в поле поиска."""
+        with allure.step(f"Вводим текст - {text} в поле поиска"):
+            logger.info(f"Вводим текст - {text} в поле поиска")
+            self.input_text(self.get_search_input(), text)
+
+    def search_books(self, text: str, timeout: int = 10) -> None:
+        """Ввести поисковый запрос и дождаться фильтрации книг."""
+        with allure.step(f"Ищем книги по запросу: {text}"):
+            logger.info(f"Ищем книги по запросу: {text}")
+            self.input_search_text(text)
+
+            def books_filtered(driver):
+                titles = [
+                    link.text.strip()
+                    for link in driver.find_elements(*BPL.book_title_links)
+                ]
+                if titles:
+                    return all(
+                        text.lower() in title.lower() for title in titles
+                    )
+                value = driver.find_element(*BPL.search_input).get_attribute(
+                    "value"
+                )
+                return value == text
+
+            WebDriverWait(self.driver, timeout).until(books_filtered)
+
+    def get_search_result_titles(self) -> list:
+        """Получить названия книг, отфильтрованных поиском."""
+        with allure.step("Получаем результаты поиска книг"):
+            logger.info("Получаем результаты поиска книг")
+            return [
+                link.text.strip()
+                for link in self.find_elements(*BPL.book_title_links)
+            ]
 
     def get_book_titles(self) -> list:
         """Получить список названий книг магазина."""

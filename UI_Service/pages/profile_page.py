@@ -106,16 +106,28 @@ class ProfilePage(BasePage):
                 EC.invisibility_of_element_located(locator)
             )
 
-    def delete_book(self, title: str) -> str:
+    def delete_book(self, title: str, attempts: int = 2) -> str:
         """Удалить книгу из профиля и вернуть текст alert."""
         with allure.step(f"Удаляем книгу из профиля: {title}"):
             logger.info(f"Удаляем книгу из профиля: {title}")
             locator = (By.XPATH, PPL.delete_book_by_title.format(title=title))
-            self.click(*locator)
-            self.click(*PPL.confirm_delete_ok)
-            alert_text = self.accept_alert()
-            self.wait_for_book_absent(title)
-            return alert_text
+            for attempt in range(1, attempts + 1):
+                self.click(*locator)
+                try:
+                    WebDriverWait(self.driver, 5).until(
+                        EC.element_to_be_clickable(PPL.confirm_delete_ok)
+                    )
+                except TimeoutException:
+                    logger.warning(
+                        "Модальное окно удаления не появилось, "
+                        f"попытка {attempt} из {attempts}"
+                    )
+                    continue
+                self.click(*PPL.confirm_delete_ok)
+                alert_text = self.accept_alert()
+                self.wait_for_book_absent(title)
+                return alert_text
+            raise AssertionError(f"Не удалось удалить книгу: {title}")
 
     def logout(self) -> None:
         """Выйти из аккаунта."""

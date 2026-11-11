@@ -23,3 +23,20 @@ store_books = [
     ("Eloquent JavaScript, Second Edition", "Marijn Haverbeke", "No Starch Press"),
     ("Understanding ECMAScript 6", "Nicholas C. Zakas", "No Starch Press"),
 ]
+
+# Search UI
+search_cases = [
+    ("Git", ["Git Pocket Guide"]),
+    ("git", ["Git Pocket Guide"]),
+    (
+        "JavaScript",
+        [
+            "Learning JavaScript Design Patterns",
+            "Speaking JavaScript",
+            "Programming JavaScript Applications",
+            "Eloquent JavaScript, Second Edition",
+        ],
+    ),
+]
+
+search_no_results = "zzzz"
